@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:aop="http://www.springframework.org/schema/aop" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns:p="http://www.springframework.org/schema/p"
+xmlns:context="http://www.springframework.org/schema/context" 
+xmlns:oxm="http://www.springframework.org/schema/oxm" 
+xmlns:mvc="http://www.springframework.org/schema/mvc"
+xmlns:task="http://www.springframework.org/schema/task"   
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+				http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+				http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.2.xsd
+				http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd 
+				http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+
+   <!--
+        This will automatically locate any and all property files you have
+        within your classpath, provided they fall under the META-INF/spring
+        directory. The located property files are parsed and their values can
+        then be used within application context files in the form of
+        ${propertyKey}.
+    <context:property-placeholder location="file:C:\\Users\\Home\\git\\common.properties"/>
+    <context:property-placeholder location="file:/etc/onehive/common.properties"/> 
+    -->    
+    <!--
+        Turn on AspectJ @Configurable support. As a result, any time you
+        instantiate an object, Spring will attempt to perform dependency
+        injection on that object. This occurs for instantiation via the "new"
+        keyword, as well as via reflection. This is possible because AspectJ
+        is used to "weave" Roo-based applications at compile time. In effect
+        this feature allows dependency injection of any object at all in your
+        system, which is a very useful feature (without @Configurable you'd
+        only be able to dependency inject objects acquired from Spring or
+        subsequently presented to a specific Spring dependency injection
+        method). Roo applications use this useful feature in a number of
+        areas, such as @PersistenceContext injection into entities.
+    -->
+    <context:spring-configured/>
+
+	<context:component-scan base-package="com.zambient.beacon" />
+	<context:property-placeholder location="classpath:beacon.properties"/>
+	<mvc:resources mapping="/resources/**" location="/resources/" />
+	<mvc:annotation-driven />
+	
+	
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+	
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="1" />
+	    <property name="mediaTypes">
+	        <map>
+	            <entry key="xml" value="application/xml"/>
+	            <entry key="json" value="application/json"/>
+	        </map>
+	    </property>
+	    <property name="defaultViews">
+	        <list>
+	            <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+	                <property name="marshaller">
+	                    <bean class="org.springframework.oxm.xstream.XStreamMarshaller"  p:autodetectAnnotations="true" />
+	                </property>
+	            </bean>
+	            <bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView" />        
+	        </list>
+	    </property>
+		<property name="ignoreAcceptHeader" value="true" />
+	</bean>
+
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="order" value="2" />
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+ 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="500000" />
+	</bean> 
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${database.driverClassName}"/>
+        <property name="url" value="${database.url}"/>
+        <property name="username" value="${database.username}"/>
+        <property name="password" value="${database.password}"/>
+        <property name="timeBetweenEvictionRunsMillis" value="1800000"/>
+        <property name="numTestsPerEvictionRun" value="3"/>
+        <property name="minEvictableIdleTimeMillis" value="1800000"/>
+    </bean>
+    
+    <bean id="sessionFactory"
+        class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="annotatedClasses">
+            <list>
+                <value>com.zambient.beacon.model.VendorBO</value>
+                <value>com.zambient.beacon.model.ZoneBO</value>
+                <value>com.zambient.beacon.model.ContentBO</value>
+                <value>com.zambient.beacon.model.ContentTypeBO</value>
+                <value>com.zambient.beacon.model.CustomerUserBO</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <prop key="hibernate.current_session_context_class">thread</prop>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+</beans>
+	
